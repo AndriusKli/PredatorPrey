@@ -24,8 +24,10 @@ public class Mouse extends Organism {
             // todo breed
             viableMoves();
             super.setTurnAlive(getTurnAlive() + 1);
+
             HashMap.Entry pickedDirection = viableMoves.get(super.getRandom().nextInt(viableMoves.size()));  // Randomly pick viable direction
             System.out.println("Mouse " + id + " picked direction " + pickedDirection); // Debugging
+
             if (pickedDirection.getValue() == TheGrid.FieldStatus.EMPTY) {
                 Object direction = pickedDirection.getKey();
                 if (direction == TheGrid.directions.NORTH) {
@@ -37,13 +39,24 @@ public class Mouse extends Organism {
                 } else {
                     super.setCoordinateX(super.getCoordinateX() - 1);
                 }
-            } else if (pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
-                System.out.println("Delicious bug!");
-                // TODO destroy bug before it moves.
-                this.bugsEaten++;
-                this.foodReserve = 3;
             } else if (pickedDirection.getValue() == TheGrid.FieldStatus.MOUSE) {
                 System.out.println("Mouse " + id + " bumped into another mouse.");
+            } else if (pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
+                System.out.println("Delicious bug! Mouse " + id + " ate a bug.");
+                this.bugsEaten++;
+                this.foodReserve = 3;
+                // How the fuck do I set the bug's status to dead??
+                Object direction = pickedDirection.getKey();
+                if (direction == TheGrid.directions.NORTH) {
+                    super.setCoordinateY(super.getCoordinateY() - 1);
+                } else if (direction == TheGrid.directions.SOUTH) {
+                    super.setCoordinateY(super.getCoordinateY() + 1);
+                } else if (direction == TheGrid.directions.EAST) {
+                    super.setCoordinateX(super.getCoordinateX() + 1);
+                } else {
+                    super.setCoordinateX(super.getCoordinateX() - 1);
+                }
+
             } else {
                 System.out.println("Nothing to do for mouse " + id + ". Standing still.");
             }

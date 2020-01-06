@@ -65,4 +65,6 @@ public abstract class Organism {
             System.out.println(direction.getKey() + " " + direction.getValue());
         }
     }
+
+
 }
