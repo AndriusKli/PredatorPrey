@@ -4,78 +4,107 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Mouse extends Organism {
-    private static int instance = 0;
     private int id;
     private int foodReserve = 3;
-    private int bugsEaten = 0;
-    private ArrayList<HashMap.Entry> viableMoves;  // All directions the creature can move that won't put it out of bounds, contained in ArrayList for easy randomization.
+    private static int instance = 0;
+    private static int bugsEaten = 0;
+    private static int miceStarved = 0;
 
 
     public Mouse(int coordinateY, int coordinateX) {
         super(coordinateY, coordinateX);
-        this.viableMoves = new ArrayList<>();
         instance++;
         this.id = instance;
+        super.setTurnsToBreed(8);
+    }
+
+    @Override
+    void defaultTurnsToBreed() {
+        super.setTurnsToBreed(8);
     }
 
     @Override
     void move() {
         if (isAlive()) {
-            // todo breed
-            viableMoves();
-            super.setTurnAlive(getTurnAlive() + 1);
+            setTurnsToBreed(getTurnsToBreed() - 1);
+            super.viableMoves();
+            if (super.getViableMoves().size() > 0) {
+                HashMap.Entry pickedDirection = super.getViableMoves().get(super.getRandom().nextInt(super.getViableMoves().size()));  // Randomly pick viable direction
+                System.out.println("Mouse " + id + " picked direction " + pickedDirection); // Debugging
 
-            HashMap.Entry pickedDirection = viableMoves.get(super.getRandom().nextInt(viableMoves.size()));  // Randomly pick viable direction
-            System.out.println("Mouse " + id + " picked direction " + pickedDirection); // Debugging
+                if (pickedDirection.getValue() == TheGrid.FieldStatus.EMPTY || pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
+                    Object direction = pickedDirection.getKey();
+                    if (direction == TheGrid.directions.NORTH) {
+                        super.setCoordinateY(super.getCoordinateY() - 1);
+                    } else if (direction == TheGrid.directions.SOUTH) {
+                        super.setCoordinateY(super.getCoordinateY() + 1);
+                    } else if (direction == TheGrid.directions.EAST) {
+                        super.setCoordinateX(super.getCoordinateX() + 1);
+                    } else {
+                        super.setCoordinateX(super.getCoordinateX() - 1);
+                    }
 
-            if (pickedDirection.getValue() == TheGrid.FieldStatus.EMPTY) {
-                Object direction = pickedDirection.getKey();
-                if (direction == TheGrid.directions.NORTH) {
-                    super.setCoordinateY(super.getCoordinateY() - 1);
-                } else if (direction == TheGrid.directions.SOUTH) {
-                    super.setCoordinateY(super.getCoordinateY() + 1);
-                } else if (direction == TheGrid.directions.EAST) {
-                    super.setCoordinateX(super.getCoordinateX() + 1);
+                    if (pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
+                        System.out.println("Delicious bug! Mouse " + id + " ate a bug.");
+                        bugsEaten++;
+                        this.foodReserve = 3;
+                    }
+                } else if (pickedDirection.getValue() == TheGrid.FieldStatus.MOUSE) {
+                    System.out.println("Mouse " + id + " bumped into another mouse.");
                 } else {
-                    super.setCoordinateX(super.getCoordinateX() - 1);
+                    System.out.println("Shouldn't show this result. Nothing to do for mouse " + id + ". Standing still.");
                 }
-            } else if (pickedDirection.getValue() == TheGrid.FieldStatus.MOUSE) {
-                System.out.println("Mouse " + id + " bumped into another mouse.");
-            } else if (pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
-                System.out.println("Delicious bug! Mouse " + id + " ate a bug.");
-                this.bugsEaten++;
-                this.foodReserve = 3;
-                // How the fuck do I set the bug's status to dead??
-                Object direction = pickedDirection.getKey();
-                if (direction == TheGrid.directions.NORTH) {
-                    super.setCoordinateY(super.getCoordinateY() - 1);
-                } else if (direction == TheGrid.directions.SOUTH) {
-                    super.setCoordinateY(super.getCoordinateY() + 1);
-                } else if (direction == TheGrid.directions.EAST) {
-                    super.setCoordinateX(super.getCoordinateX() + 1);
-                } else {
-                    super.setCoordinateX(super.getCoordinateX() - 1);
-                }
-
             } else {
-                System.out.println("Nothing to do for mouse " + id + ". Standing still.");
+                System.out.println("Nowhere to go for mouse " + id + ". Standing still.");
             }
-
             foodReserve--;
-            if (foodReserve < -1) {
+            if (foodReserve < 0) {
                 super.setAlive(false);
+                miceStarved++;
                 System.out.println("Oh no, mouse " + id + " starved.");
             }
         }
     }
 
 
-    public void viableMoves() {
-        for (HashMap.Entry direction : super.getAdjacentFields().entrySet()) {
-            if (direction.getValue() != TheGrid.FieldStatus.OUT_OF_BOUNDS) {
-                viableMoves.add(direction);
+    @Override
+    Organism breed() {
+        if (emptyFields().size() > 0) {
+            HashMap.Entry randomEntry = emptyFields().get(getRandom().nextInt(emptyFields().size()));
+            Object direction = randomEntry.getKey();
+            if (direction == TheGrid.directions.NORTH) {
+                defaultTurnsToBreed();
+                System.out.println("Mouse " + id + " spawned a mouse north."); // Debug
+                return new Mouse(super.getCoordinateY() - 1, super.getCoordinateX());
+            } else if (direction == TheGrid.directions.SOUTH) {
+                defaultTurnsToBreed();
+                System.out.println("Mouse " + id + " spawned a mouse south."); // Debug
+                return new Mouse(super.getCoordinateY() + 1, super.getCoordinateX());
+            } else if (direction == TheGrid.directions.EAST) {
+                defaultTurnsToBreed();
+                System.out.println("Mouse " + id + " spawned a mouse east."); // Debug
+                return new Mouse(super.getCoordinateY(), super.getCoordinateX() + 1);
+            } else if (direction == TheGrid.directions.WEST){
+                defaultTurnsToBreed();
+                System.out.println("Mouse " + id + " spawned a mouse west."); // Debug
+                return new Mouse(super.getCoordinateY(), super.getCoordinateX() - 1);
+            } else {
+                System.out.println("This statement should be unreachable"); // Debug
+                return null;
             }
+
+        } else {
+            System.out.println("Nowhere to spawn babies.");
+            setTurnsToBreed(1);
+            return null;
         }
     }
 
+    //// Debug
+
+    public void adjacentFieldsTesterMouse() {
+        for (HashMap.Entry direction : super.getViableMoves()) {
+            System.out.println("Mouse " + id + " " + direction.getKey() + " " + direction.getValue());
+        }
+    }
 }

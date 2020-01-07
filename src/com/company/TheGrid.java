@@ -1,27 +1,28 @@
 package com.company;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
 public class TheGrid {
-    private Scanner scanner;
     private int turn = 0;
     private Random random;
     private Organism[][] playField;
     private ArrayList<Organism> mice;
     private ArrayList<Organism> bugs;
     private ArrayList<Organism> organisms;
+    private ArrayList<Organism> newMice;
+    private ArrayList<Organism> newBugs;
 
 
     public TheGrid() {
-        this.scanner = new Scanner(System.in);
         this.playField = new Organism[20][20];
         this.random = new Random();
         this.organisms = new ArrayList<>();
         this.mice = new ArrayList<>();
         this.bugs = new ArrayList<>();
+        this.newMice = new ArrayList<>();
+        this.newBugs = new ArrayList<>();
     }
 
 
@@ -39,7 +40,7 @@ public class TheGrid {
         WEST,
     }
 
-    public FieldStatus getCoordinateStatus(int y, int x) { // Potential issue: dead bodies blocking other units?
+    public FieldStatus getCoordinateStatus(int y, int x) {
         if (y > 20 || x > 20 || y < 0 || x < 0) {
             return FieldStatus.OUT_OF_BOUNDS;
         }
@@ -60,16 +61,20 @@ public class TheGrid {
         this.bugs.add(organism);
     }
 
+    public void addOrganism(Organism organism) {
+        if (organism instanceof Mouse) {
+            this.mice.add(organism);
+        } else {
+            this.bugs.add(organism);
+        }
+    }
+
 
     private void checkDirections(Organism organism) {
         organism.getAdjacentFields().put(directions.NORTH, getCoordinateStatus(organism.getCoordinateY() - 1, organism.getCoordinateX()));
         organism.getAdjacentFields().put(directions.SOUTH, getCoordinateStatus(organism.getCoordinateY() + 1, organism.getCoordinateX()));
         organism.getAdjacentFields().put(directions.EAST, getCoordinateStatus(organism.getCoordinateY(), organism.getCoordinateX() + 1));
         organism.getAdjacentFields().put(directions.WEST, getCoordinateStatus(organism.getCoordinateY(), organism.getCoordinateX() - 1));
-    }
-
-    public Organism[][] getPlayField() {
-        return playField;
     }
 
     private int randomCoordinate() {
@@ -83,21 +88,20 @@ public class TheGrid {
     public void updatePlayField() {
         this.playField = new Organism[20][20];
         for (Organism organism : organisms) {
-            if (organism.isAlive()) { // remove if dead, saves times and prevents eventual crash.
+            if(organism.isAlive()) {
                 playField[organism.getCoordinateY()][organism.getCoordinateX()] = organism;
             }
         }
     }
 
-    public void eatenBugs() {
-        for (Organism mouse : mice) {
-            for (Organism bug : bugs) {
-                if (mouse.getCoordinateX() == bug.getCoordinateX() && mouse.getCoordinateY() == bug.getCoordinateY()) {
-                    bug.setAlive(false);
-                }
+    public void eatenBugs(Organism mouse) {
+        for (Organism bug : bugs) {
+            if (mouse.getCoordinateX() == bug.getCoordinateX() && mouse.getCoordinateY() == bug.getCoordinateY()) {
+                bug.setAlive(false);
             }
         }
     }
+
 
     public void purgeDeadMice() {
         ArrayList<Organism> updated = new ArrayList<>();
@@ -120,54 +124,71 @@ public class TheGrid {
     }
 
     public void updateOrganismList() {
-        ArrayList<Organism> temp = new ArrayList<>();
-        temp.addAll(mice);
-        temp.addAll(bugs);
-        this.organisms = temp;
+        this.organisms.clear();
+        organisms.addAll(mice);
+        organisms.addAll(bugs);
     }
 
-//    public void updateDirections() {
-//        for (Organism organism : organisms) {
-//            if (organism.isAlive()) {
-//                checkDirections(organism);
-//            }
-//        }
-//    }
-// Each organism needs to check its surrounding BEFORE moving, otherwise they might 'step' on one another.
 
-//    public void moveOrganisms() {
-//        for (Organism organism : organisms) {
-//            if (organism.isAlive()) {
-//                checkDirections(organism);
-//                organism.move();
-//                updatePlayField();
-//            }
-//        }
-//    }
 
-    public void moveOrganisms() {
-        for (Organism organism : organisms) {
-            checkDirections(organism);
-            organism.move();
-            if (organism instanceof Bug) {
-                eatenBugs();
+
+
+    public void takeATurn() {
+        updateOrganismList();
+        purgeDeadMice(); // Both of these checks for mice and bugs should probably be performed within the following for-each cycle.
+        for (Organism mouse : mice) {
+            checkDirections(mouse); // Each organism needs to check its surrounding BEFORE moving, otherwise they might unintentionally 'step' on one another.
+            mouse.move();
+            eatenBugs(mouse);
+            if (mouse.getTurnsToBreed() == 0) {
+                checkDirections(mouse);
+                mouse.emptyFields();
+//                mouse.emptyFieldTester();  // Debug
+                Organism tempMouse = mouse.breed(); // Just in case there was no space to place the new mouse.
+                if (tempMouse != null) {            //
+                    organisms.add(tempMouse);       //
+                    newMice.add(tempMouse);         //
+                }
             }
             updatePlayField();
         }
-        purgeDeadBugs();
-        purgeDeadMice();
+        mice.addAll(newMice);
+        newMice.clear();
         updateOrganismList();
+
+        purgeDeadBugs();
+        for (Organism bug : bugs) {
+            checkDirections(bug);
+            bug.move();
+            if (bug.getTurnsToBreed() == 0) {
+                checkDirections(bug);
+                bug.emptyFields();
+                Organism tempBug = bug.breed();
+                if (tempBug != null) {
+                    organisms.add(tempBug);
+                    newBugs.add(tempBug);
+                }
+            }
+            updatePlayField();
+        }
+        bugs.addAll(newBugs);
+        newBugs.clear();
+//        updateOrganismList();
     }
+
+    // TODO
+    // Move mice first. Check if any bugs share the same space as mice. Kill those bugs. Spawn new mice. Do the same for bugs. When moving bugs, make sure they don't step on mice.
+    // All organisms probably should just keep the status of adjacent fields and not trim down the list before moving (as the move itself checks the status of the chosen direction)).
 
     public void printPlayField() {
         for (int i = 0; i < playField.length; i++) {
             for (int j = 0; j < 20; j++) {
                 if (playField[i][j] == null) {
                     System.out.print(" — ");
-                } else if (playField[i][j] instanceof Mouse) {
-                    System.out.print(" o ");
                 } else if (playField[i][j] instanceof Bug) {
                     System.out.print(" x ");
+                } else if (playField[i][j] instanceof Mouse) {
+                    System.out.print(" o ");
                 } else {
                     System.out.print("ERR");
                 }
@@ -175,6 +196,11 @@ public class TheGrid {
             System.out.println();
         }
     }
+
+ /*
+ Buglist:
+ *Creatures cannot spawn their babies on the field they were just on.
+  */
 
 
 }
