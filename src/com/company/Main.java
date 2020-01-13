@@ -9,3 +9,9 @@ public class Main {
 
     }
 }
+
+
+/*
+ Buglist:
+ *Organisms cannot spawn their babies on the field they were just on.
+  */
