@@ -15,6 +15,10 @@ public class Bug extends Organism {
         super.setTurnsToBreed(3);
     }
 
+    public static int getInstance() {
+        return instance;
+    }
+
     @Override
     void defaultTurnsToBreed() {
         super.setTurnsToBreed(3);

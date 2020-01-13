@@ -1,6 +1,5 @@
 package com.company;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Mouse extends Organism {
@@ -21,6 +20,18 @@ public class Mouse extends Organism {
     @Override
     void defaultTurnsToBreed() {
         super.setTurnsToBreed(8);
+    }
+
+    public static int getInstance() {
+        return instance;
+    }
+
+    public static int getBugsEaten() {
+        return bugsEaten;
+    }
+
+    public static int getMiceStarved() {
+        return miceStarved;
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.company;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 public abstract class Organism {
@@ -110,4 +109,16 @@ public abstract class Organism {
     }
 
 
+    @Override
+    public String toString() {
+        return "Organism{" +
+                "turnsToBreed=" + turnsToBreed +
+                ", coordinateY=" + coordinateY +
+                ", coordinateX=" + coordinateX +
+                ", adjacentFields=" + adjacentFields +
+                ", alive=" + alive +
+                ", viableMoves=" + viableMoves +
+                ", emptyFields=" + emptyFields +
+                '}';
+    }
 }
