@@ -17,20 +17,7 @@ public class Main {
         grid.updatePlayField();
         grid.printPlayField();
 
-        grid.takeATurn();
-        grid.printPlayField();
-
-        grid.takeATurn();
-        grid.printPlayField();
-
-        grid.takeATurn();
-        grid.printPlayField();
-
-        grid.takeATurn();
-        grid.printPlayField();
-
-        grid.takeATurn();
-        grid.printPlayField();
+        grid.start();
 
     }
 }

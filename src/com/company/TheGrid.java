@@ -13,6 +13,7 @@ public class TheGrid {
     private ArrayList<Organism> organisms;
     private ArrayList<Organism> newMice;
     private ArrayList<Organism> newBugs;
+    private Scanner scanner;
 
 
     public TheGrid() {
@@ -23,6 +24,7 @@ public class TheGrid {
         this.bugs = new ArrayList<>();
         this.newMice = new ArrayList<>();
         this.newBugs = new ArrayList<>();
+        this.scanner = new Scanner(System.in);
     }
 
 
@@ -133,7 +135,7 @@ public class TheGrid {
 
 
 
-    public void takeATurn() {
+    private void takeATurn() {
         updateOrganismList();
         purgeDeadMice(); // Both of these checks for mice and bugs should probably be performed within the following for-each cycle.
         for (Organism mouse : mice) {
@@ -194,6 +196,40 @@ public class TheGrid {
                 }
             }
             System.out.println();
+        }
+    }
+
+    public void start() {
+        System.out.println("Press 1 to take a turn.\n" +
+                "Press 2 to take X turns.\n" +
+                "Press anything else to quit.");
+
+
+        boolean loops = true;
+        while (loops) {
+            if (scanner.hasNextInt()) {
+                switch (scanner.nextInt()) {
+                    case 1:
+                        takeATurn();
+                        printPlayField();
+                        break;
+                    case 2:
+                        System.out.println("How many turns do you want to take? Press Q to cancel.");
+                        int amount = scanner.nextInt();
+                        for (int i = 0; i < amount; i++) {
+                            takeATurn();
+                        }
+                        printPlayField();
+                        break;
+                    default:
+                        System.out.println("Bye");
+                        loops = false;
+                        break;
+                }
+            } else {
+                System.out.println("Bye");
+                break;
+            }
         }
     }
 
