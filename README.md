@@ -1,5 +1,4 @@
 # PredatorPrey
-Test upload 2
 
 A poorly optimized solution for the following excercise:
 
