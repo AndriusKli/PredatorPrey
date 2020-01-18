@@ -1,6 +1,5 @@
 package com.company;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Bug extends Organism {
@@ -31,6 +30,7 @@ public class Bug extends Organism {
             super.viableMoves();
             if (super.getViableMoves().size() > 0) {
                 HashMap.Entry pickedDirection = super.getViableMoves().get(super.getRandom().nextInt(super.getViableMoves().size()));  // Randomly pick viable direction
+                System.out.println("Bug " + id +  " on coordinate " + getCoordinateY() + "y " + getCoordinateX() + "x picked direction " + pickedDirection); // Debugging
 
                 if (pickedDirection.getValue() == TheGrid.FieldStatus.EMPTY) {
                     Object direction = pickedDirection.getKey();
@@ -85,7 +85,7 @@ public class Bug extends Organism {
             }
 
         } else {
-            System.out.println("Nowhere to spawn babies."); // Debug
+            System.out.println("Nowhere to spawn babies. Waiting a turn."); // Debug
             setTurnsToBreed(1);
             return null;
         }

@@ -21,12 +21,13 @@ public abstract class Organism {
         this.adjacentFields = new HashMap<>();
         this.viableMoves = new ArrayList<>();
         this.emptyFields = new ArrayList<>();
-
     }
 
     abstract void move();
 
     abstract void defaultTurnsToBreed();
+
+    abstract Organism breed();
 
     public int getCoordinateY() {
         return this.coordinateY;
@@ -91,10 +92,7 @@ public abstract class Organism {
         return emptyFields;
     }
 
-
-    abstract Organism breed();
-
-    //// Debugging
+    //// Debugging tools
 
     public void adjacentFieldsTester() {
         for (HashMap.Entry direction : adjacentFields.entrySet()) {

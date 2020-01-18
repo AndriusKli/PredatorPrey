@@ -41,7 +41,7 @@ public class Mouse extends Organism {
             super.viableMoves();
             if (super.getViableMoves().size() > 0) {
                 HashMap.Entry pickedDirection = super.getViableMoves().get(super.getRandom().nextInt(super.getViableMoves().size()));  // Randomly pick viable direction
-                System.out.println("Mouse " + id + " picked direction " + pickedDirection); // Debugging
+                System.out.println("Mouse " + id +  " on coordinate " + getCoordinateY() + "y " + getCoordinateX() + "x picked direction " + pickedDirection); // Debugging
 
                 if (pickedDirection.getValue() == TheGrid.FieldStatus.EMPTY || pickedDirection.getValue() == TheGrid.FieldStatus.BUG) {
                     Object direction = pickedDirection.getKey();
@@ -105,7 +105,7 @@ public class Mouse extends Organism {
             }
 
         } else {
-            System.out.println("Nowhere to spawn babies.");
+            System.out.println("Nowhere to spawn babies. Waiting a turn.");
             setTurnsToBreed(1);
             return null;
         }

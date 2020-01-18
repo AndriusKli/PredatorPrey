@@ -89,8 +89,7 @@ public class TheGrid {
             }
         }
     }
-
-
+    
     private void purgeDeadMice() {
         ArrayList<Organism> updated = new ArrayList<>();
         for (int i = 0; i < mice.size(); i++) {
@@ -117,11 +116,13 @@ public class TheGrid {
         organisms.addAll(bugs);
     }
 
-    private void takeATurn() {          // Move mice first. Check if any bugs share the same space as mice. Kill those bugs. Spawn new mice. Do the same for bugs. When moving bugs, make sure they don't step on mice.
-        updateOrganismList();
-        purgeDeadMice();                // Both of these checks for mice and bugs should probably be performed within the following for-each cycle.
+    // Move mice first. Check if any bugs share the same space as mice. Kill those bugs. Spawn new mice. Do the same for bugs. When moving bugs, make sure they don't step on mice.
+    // Each organism needs to check its surrounding BEFORE moving, otherwise they might unintentionally 'step' on one another.
+
+    private void takeATurn() {
+        purgeDeadMice();
         for (Organism mouse : mice) {
-            checkDirections(mouse);     // Each organism needs to check its surrounding BEFORE moving, otherwise they might unintentionally 'step' on one another.
+            checkDirections(mouse);
 //            System.out.println(mouse.toString()); // Debug
             mouse.move();
             eatenBugs(mouse);
@@ -162,15 +163,76 @@ public class TheGrid {
         turn++;
     }
 
+
+    private void takeATurn(int delay) throws InterruptedException {
+        updateOrganismList();
+        purgeDeadMice();
+        for (Organism mouse : mice) {
+            checkDirections(mouse);
+            mouse.move();
+            eatenBugs(mouse);
+            if (mouse.getTurnsToBreed() == 0) {
+                checkDirections(mouse);
+                mouse.emptyFields();
+                Organism tempMouse = mouse.breed(); // Just in case there was no space to place the new mouse.
+                if (tempMouse != null) {            //
+                    organisms.add(tempMouse);       //
+                    newMice.add(tempMouse);         //
+                }
+            }
+            updatePlayField();
+            printPlayField();
+            Thread.sleep(delay);
+        }
+        mice.addAll(newMice);
+        newMice.clear();
+        updateOrganismList();
+
+        purgeDeadBugs();
+        for (Organism bug : bugs) {
+            checkDirections(bug);
+            bug.move();
+            if (bug.getTurnsToBreed() == 0) {
+                checkDirections(bug);
+                bug.emptyFields();
+                Organism tempBug = bug.breed();
+                if (tempBug != null) {
+                    organisms.add(tempBug);
+                    newBugs.add(tempBug);
+                }
+            }
+            updatePlayField();
+            printPlayField();
+            Thread.sleep(delay);
+        }
+        bugs.addAll(newBugs);
+        newBugs.clear();
+        turn++;
+    }
+
     private void printPlayField() {
-        for (int i = 0; i < playField.length; i++) {
-            for (int j = 0; j < 20; j++) {
-                if (playField[i][j] == null) {
+        for (int i = 0; i < playField.length + 1; i++) {
+            for (int j = 0; j < 21; j++) {
+                if (i == 0 && j == 0) {
                     System.out.print("   ");
-                } else if (playField[i][j] instanceof Bug) {
-                    System.out.print(" x ");
-                } else if (playField[i][j] instanceof Mouse) {
-                    System.out.print(" o ");
+                } else if (i == 0) {
+                    if (j > 9) {
+                        System.out.printf(" %d", j - 1);
+                    } else {
+                        System.out.printf(" %d ", j - 1);
+                    }
+                } else if (j == 0) {
+                    if (i > 10) {
+                        System.out.printf(" %d", i - 1);
+                    } else {
+                        System.out.printf(" %d ", i - 1);
+                    }
+                } else if (playField[i - 1][j - 1] == null) {
+                    System.out.print(" – ");
+                } else if (playField[i - 1][j - 1] instanceof Bug) {
+                    System.out.print(" X ");
+                } else if (playField[i - 1][j - 1] instanceof Mouse) {
+                    System.out.print(" O ");
                 } else {
                     System.out.print("ERR");
                 }
@@ -188,18 +250,34 @@ public class TheGrid {
         while (loops) {
             System.out.println("Press 1 to take a turn.\n" +
                     "Press 2 to take X turns.\n" +
+                    "Press 3 to take a rapid turn\n" +
                     "Press anything else to quit.");
             if (scanner.hasNextInt()) {
                 switch (scanner.nextInt()) {
                     case 1:
-                        takeATurn();
-                        printPlayField();
+                        try {
+                            takeATurn(1000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
                     case 2:
                         System.out.println("How many turns do you want to take? Press Q to cancel.");
                         int amount = scanner.nextInt();
                         for (int i = 0; i < amount; i++) {
+                            try {
+                                takeATurn();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        printPlayField();
+                        break;
+                    case 3:
+                        try {
                             takeATurn();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                         printPlayField();
                         break;
@@ -238,7 +316,7 @@ public class TheGrid {
 
     private void spawnOrganisms(int mice, int bugs) {
         if (mice + bugs > 400) {
-            System.out.println("Not enough space to spawn that many organisms. Not spawning organisms.");
+            System.out.println("Not enough space to spawn that many organisms. Not spawning any organisms.");
         } else {
 
             ArrayList<int[]> emptyFields = emptyFields();
